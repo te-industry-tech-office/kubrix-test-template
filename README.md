@@ -8,7 +8,7 @@ Add the location file to your Backstage catalog locations (for kubriX, put this 
 
 ```yaml
 - type: url
-  target: https://raw.githubusercontent.com/te-industry-tech-office/kubrix-test-template/main/showcase-templates.yaml
+  target: https://github.com/mjay-bs-test/kubrix-test-template/main/showcase-templates.yaml
 ```
 
 If the repo is private, configure Backstage with a token that can read it.
