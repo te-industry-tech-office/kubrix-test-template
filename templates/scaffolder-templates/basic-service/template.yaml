@@ -76,7 +76,7 @@ spec:
       input:
         description: ${{ parameters.description }}
         repoUrl: ${{ parameters.repoUrl }}
-        repoVisibility: private
+        repoVisibility: public
         deleteBranchOnMerge: true
         token: ${{ secrets.USER_OAUTH_TOKEN }}
 
