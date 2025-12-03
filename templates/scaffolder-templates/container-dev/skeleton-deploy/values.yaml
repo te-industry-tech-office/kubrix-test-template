@@ -1,0 +1,23 @@
+# Default values
+replicaCount: 1
+
+image:
+  repository: ${{values.containerRegistry}}/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+resources:
+  requests:
+    memory: "64Mi"
+    cpu: "100m"
+  limits:
+    memory: "128Mi"
+    cpu: "250m"
+
+# Injected by kubriX ApplicationSet from spoke cluster annotation
+kubriXIngressDomain: ""

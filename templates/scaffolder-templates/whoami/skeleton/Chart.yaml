@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ${{values.team}}-${{values.application_id}}
+description: Whoami test application for ${{values.application_id}}
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

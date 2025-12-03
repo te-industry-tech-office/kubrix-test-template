@@ -1,0 +1,169 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: container-dev
+  title: Container Development + Hub-Spoke Deployment
+  description: Creates two repos - one for container image development, one for GitOps deployment via kubriX SCM generator to spoke clusters.
+  tags:
+    - container
+    - argocd
+    - kubernetes
+    - hub-spoke
+    - kargo
+    - kubrix
+spec:
+  owner: group:platform-engineering
+  type: service
+
+  parameters:
+    - title: Application details
+      required:
+        - application_id
+        - owner
+        - description
+      properties:
+        application_id:
+          title: Application name
+          type: string
+          description: Unique name for the application (will be prefixed with team name).
+          default: hello-world
+          pattern: '^[a-z0-9-]+$'
+        description:
+          title: Description
+          type: string
+          description: What does this application do?
+        owner:
+          title: Owner team
+          type: string
+          description: Team that owns this application.
+          ui:field: MyGroupsPicker
+          ui:options: {}
+
+    - title: Container image settings
+      required:
+        - containerRegistry
+      properties:
+        containerRegistry:
+          title: Container registry
+          type: string
+          description: Registry where the image will be pushed.
+          default: ghcr.io
+
+    - title: Repository location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: GitHub Organization
+          type: string
+          description: GitHub organization for the repositories.
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - mjay-bs-test
+            requestUserCredentials:
+              secretsKey: USER_OAUTH_TOKEN
+              additionalScopes:
+                github:
+                  - repo
+                  - workflow
+            allowedRepos:
+              - will-be-autocompleted-by-template
+
+  steps:
+    # Fetch team details from catalog
+    - id: catalogFetch
+      name: Fetch team details
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.owner }}
+
+    # Fetch and publish container image repo
+    - id: fetch-app
+      name: Fetch app skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton-app
+        targetPath: ./app-repo
+        copyWithoutTemplating:
+          - .github/workflows/build.yaml
+        values:
+          application_id: ${{ parameters.application_id }}
+          description: ${{ parameters.description }}
+          team: ${{ steps['catalogFetch'].output.entity.metadata.name }}
+          containerRegistry: ${{ parameters.containerRegistry }}
+          repoOwner: ${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+
+    - id: publish-app
+      name: Publish app repo to GitHub
+      action: publish:github
+      input:
+        description: "Container image source: ${{ parameters.description }}"
+        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}-app&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+        sourcePath: ./app-repo
+        repoVisibility: public
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+        defaultBranch: main
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        gitAuthorName: ${{ user.entity.metadata.name }}
+        gitAuthorEmail: ${{ user.entity.spec.profile.email }}
+
+    - id: register-app
+      name: Register app in catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-app'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+    # Fetch and publish deployment repo (GitOps with app-stages.yaml for SCM generator)
+    - id: fetch-deploy
+      name: Fetch deploy skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton-deploy
+        targetPath: ./deploy-repo
+        values:
+          application_id: ${{ parameters.application_id }}
+          description: ${{ parameters.description }}
+          team: ${{ steps['catalogFetch'].output.entity.metadata.name }}
+          containerRegistry: ${{ parameters.containerRegistry }}
+          repoOwner: ${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+          appRepoName: ${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}-app
+
+    - id: publish-deploy
+      name: Publish deploy repo to GitHub
+      action: publish:github
+      input:
+        description: "GitOps deployment for ${{ parameters.application_id }}"
+        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+        sourcePath: ./deploy-repo
+        repoVisibility: public
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+        defaultBranch: main
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        gitAuthorName: ${{ user.entity.metadata.name }}
+        gitAuthorEmail: ${{ user.entity.spec.profile.email }}
+
+    - id: register-deploy
+      name: Register deploy repo in catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-deploy'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: App Repository
+        url: ${{ steps['publish-app'].output.remoteUrl }}
+      - title: Deploy Repository
+        url: ${{ steps['publish-deploy'].output.remoteUrl }}
+      - title: App in catalog
+        icon: catalog
+        entityRef: ${{ steps['register-app'].output.entityRef }}
+      - title: Deploy in catalog
+        icon: catalog
+        entityRef: ${{ steps['register-deploy'].output.entityRef }}

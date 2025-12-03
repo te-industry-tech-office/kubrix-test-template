@@ -1,0 +1,34 @@
+teamName: ${{values.team}}
+appName: ${{values.application_id}}
+appType: helm
+appNamespace:
+  create: true
+  annotations: {}
+  labels: {}
+stages:
+  - name: "dev"
+    targetClusterStage: "dev"
+    requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: warehouse-{{ .Values.appName }}
+      sources:
+        direct: true
+  - name: "test"
+    targetClusterStage: "test"
+    requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: warehouse-{{ .Values.appName }}
+      sources:
+        stages:
+        - dev
+  - name: "prod"
+    targetClusterStage: "prod"
+    requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: warehouse-{{ .Values.appName }}
+      sources:
+        stages:
+        - test
