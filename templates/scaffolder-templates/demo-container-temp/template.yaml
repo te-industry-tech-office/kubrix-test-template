@@ -1,20 +1,20 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: whoami-test
-  title: Whoami Test App
-  description: Deploys a simple traefik/whoami container for testing kubriX SCM generator and Kargo pipelines.
+  name: demo-container
+  title: Demo Container App
+  description: dev and deploy a demo container, for testing kubriX SCM generator and Kargo pipelines.
   tags:
     - test
-    - whoami
+    - demo-container
     - argocd
     - kubernetes
     - hub-spoke
     - kargo
     - csa
 spec:
-  owner: group:platform-engineering
-  type: service
+  owner: group:csa
+  type: demo
 
   parameters:
     - title: Application details
@@ -28,13 +28,13 @@ spec:
           title: Application name
           type: string
           description: Unique name for the application (will be prefixed with team name).
-          default: whoami
+          default: demo-container
           pattern: '^[a-z0-9-]+$'
         description:
           title: Description
           type: string
           description: What does this application do?
-          default: Test whoami application for validating kubriX deployment pipeline
+          default: Test dev and deploy of a demo container for validating kubriX deployment pipeline
         owner:
           title: Owner team
           type: string
@@ -78,12 +78,42 @@ spec:
       input:
         entityRef: ${{ parameters.owner }}
 
-    # Fetch and publish deployment repo
-    - id: fetch-deploy
-      name: Fetch deploy skeleton
+    # Fetch and publish container dev repo
+    - id: fetch-app
+      name: Fetch application skeleton
       action: fetch:template
       input:
-        url: ./skeleton
+        url: ./demo-container
+        targetPath: ./app-repo
+        values:
+          application_id: ${{ parameters.application_id }}
+          description: ${{ parameters.description }}
+          fqdn: ${{ parameters.fqdn }}
+          team: ${{ steps['catalogFetch'].output.entity.metadata.name }}
+          repoUrlRepo: ${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}
+          repoOwner: ${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+
+    - id: publish-app
+      name: Publish application repo to GitHub
+      action: publish:github
+      input:
+        description: "Demo Container dev: ${{ parameters.description }}"
+        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}-app&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+        sourcePath: ./app-repo
+        repoVisibility: public
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+        defaultBranch: main
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        gitAuthorName: ${{ user.entity.metadata.name }}
+        gitAuthorEmail: ${{ user.entity.spec.profile.email }}
+
+    # Fetch and publish deployment repo
+    - id: fetch-deploy
+      name: Fetch deployment skeleton
+      action: fetch:template
+      input:
+        url: ./deployment
         targetPath: ./deploy-repo
         values:
           application_id: ${{ parameters.application_id }}
@@ -94,11 +124,11 @@ spec:
           repoOwner: ${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
 
     - id: publish-deploy
-      name: Publish deploy repo to GitHub
+      name: Publish deployment repo to GitHub
       action: publish:github
       input:
-        description: "Whoami test deployment: ${{ parameters.description }}"
-        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+        description: "Demo Container deployment: ${{ parameters.description }}"
+        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}-deploy&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
         sourcePath: ./deploy-repo
         repoVisibility: public
         deleteBranchOnMerge: true
@@ -117,7 +147,9 @@ spec:
 
   output:
     links:
-      - title: Repository
+      - title: App Repository
+        url: ${{ steps['publish-app'].output.remoteUrl }}
+      - title: Deploy Repository
         url: ${{ steps['publish-deploy'].output.remoteUrl }}
       - title: Open in catalog
         icon: catalog
