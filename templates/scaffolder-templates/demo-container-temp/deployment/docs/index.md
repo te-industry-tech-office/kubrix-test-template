@@ -1,28 +1,53 @@
-## Info
+# ${{values.team}}-${{values.application_id}} Deployment
 
-Kargo Demo App ${{values.application_id}}
+## Overview
 
-## Getting started
+This repository contains the GitOps deployment configuration for **${{values.application_id}}** owned by **${{values.team}}**.
 
-Start write your documentation by adding more markdown (.md) files to this folder (/docs) or replace the content in this file.
+It uses the kubriX SCM generator pattern with Kargo for progressive delivery across environments.
 
-## Table of Contents
+## Repository Structure
 
-The Table of Contents on the right is generated automatically based on the hierarchy
-of headings. Only use one H1 (`#` in Markdown) per file.
+```
+├── templates/            # Helm templates
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   └── ingress.yaml
+├── app-stages.yaml       # Kargo stage definitions
+├── values.yaml           # Base Helm values
+├── values-dev.yaml       # Dev environment overrides
+├── values-test.yaml      # Test environment overrides
+├── values-prod.yaml      # Prod environment overrides
+└── docs/                 # Documentation (this folder)
+```
 
-## Site navigation
+## Related Repositories
 
-For new pages to appear in the left hand navigation you need edit the `mkdocs.yml`
-file in root of your repo. The navigation can also link out to other sites.
+| Repository | Purpose |
+|------------|---------|
+| [${{values.team}}-${{values.application_id}}-dev](https://github.com/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-dev) | Application source code |
+| [${{values.team}}-${{values.application_id}}-deploy](https://github.com/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-deploy) | GitOps deployment (this repo) |
 
-Alternatively, if there is no `nav` section in `mkdocs.yml`, a navigation section
-will be created for you. However, you will not be able to use alternate titles for
-pages, or include links to other sites.
+## Environments
 
-Note that MkDocs uses `mkdocs.yml`, not `mkdocs.yaml`, although both appear to work.
-See also <https://www.mkdocs.org/user-guide/configuration/>.
+| Environment | URL | Cluster |
+|-------------|-----|---------|
+| Dev | http://${{values.team}}-${{values.application_id}}.dev.${{values.fqdn}} | dev001 |
+| Test | http://${{values.team}}-${{values.application_id}}.test.${{values.fqdn}} | test001 |
+| Prod | http://${{values.team}}-${{values.application_id}}.prod.${{values.fqdn}} | prod001 |
+
+## Deployment Pipeline
+
+1. **Dev**: Auto-deployed on new container image
+2. **Test**: Promoted via Kargo after dev validation
+3. **Prod**: Promoted via Kargo after test validation
+
+## Links
+
+- [ArgoCD Application](https://argocd.${{values.fqdn}}/applications/adn-${{values.team}}/${{values.team}}-${{values.application_id}})
+- [Kargo Project](https://kargo.${{values.fqdn}}/project/${{values.team}}-${{values.application_id}}-kargo-project)
+- [Grafana Dashboard](https://grafana.${{values.fqdn}}/d/k8s_views_ns/kubernetes-views-namespaces)
 
 ## Support
 
-That's it. If you need support, reach out in [#docs-like-code](https://discord.com/channels/687207715902193673/714754240933003266) on Discord.
+For issues or questions, contact the **${{values.team}}** team.

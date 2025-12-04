@@ -1,28 +1,46 @@
-## Info
+# ${{values.team}}-${{values.application_id}} Development
 
-Kargo Demo App ${{values.application_id}}
+## Overview
 
-## Getting started
+This repository contains the source code for the **${{values.application_id}}** container application owned by **${{values.team}}**.
 
-Start write your documentation by adding more markdown (.md) files to this folder (/docs) or replace the content in this file.
+## Repository Structure
 
-## Table of Contents
+```
+├── .github/workflows/    # CI/CD pipeline (Docker build & push)
+├── src/                  # Application source code
+├── Dockerfile            # Container image definition
+└── docs/                 # Documentation (this folder)
+```
 
-The Table of Contents on the right is generated automatically based on the hierarchy
-of headings. Only use one H1 (`#` in Markdown) per file.
+## Related Repositories
 
-## Site navigation
+| Repository | Purpose |
+|------------|---------|
+| [${{values.team}}-${{values.application_id}}-dev](https://github.com/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-dev) | Application source code (this repo) |
+| [${{values.team}}-${{values.application_id}}-deploy](https://github.com/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-deploy) | GitOps deployment configuration |
 
-For new pages to appear in the left hand navigation you need edit the `mkdocs.yml`
-file in root of your repo. The navigation can also link out to other sites.
+## Getting Started
 
-Alternatively, if there is no `nav` section in `mkdocs.yml`, a navigation section
-will be created for you. However, you will not be able to use alternate titles for
-pages, or include links to other sites.
+### Local Development
 
-Note that MkDocs uses `mkdocs.yml`, not `mkdocs.yaml`, although both appear to work.
-See also <https://www.mkdocs.org/user-guide/configuration/>.
+1. Clone this repository
+2. Build the Docker image:
+   ```bash
+   docker build -t ${{values.application_id}} .
+   ```
+3. Run locally:
+   ```bash
+   docker run -p 8080:80 ${{values.application_id}}
+   ```
+
+### CI/CD Pipeline
+
+The GitHub Actions workflow automatically:
+1. Builds the Docker image on push to `main`
+2. Pushes to GitHub Container Registry (ghcr.io)
+3. Tags with commit SHA and `latest`
 
 ## Support
 
-That's it. If you need support, reach out in [#docs-like-code](https://discord.com/channels/687207715902193673/714754240933003266) on Discord.
+For issues or questions, contact the **${{values.team}}** team.

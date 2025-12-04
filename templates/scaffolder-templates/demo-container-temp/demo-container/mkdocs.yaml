@@ -1,5 +1,5 @@
-site_name: "${{values.clusterName}}"
-site_description: "Documentation for ${{values.clusterName}}"
+site_name: "${{values.team}}-${{values.application_id}}-dev"
+site_description: "Development documentation for ${{values.team}}-${{values.application_id}}"
 
 nav:
   - Introduction: index.md
