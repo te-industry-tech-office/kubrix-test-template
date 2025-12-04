@@ -14,7 +14,7 @@ metadata:
     - csa
 spec:
   owner: group:csa
-  type: demo
+  type: template
 
   parameters:
     - title: Application details

@@ -24,7 +24,7 @@ metadata:
     grafana/dashboard-selector: "(tags @> 'suXess')"
     grafana/overview-dashboard: "https://grafana.${{values.fqdn}}/d/k8s_views_ns/kubernetes-views-namespaces?orgId=1&refresh=30s&var-datasource=default&var-cluster=prod001&var-namespace=${{values.team}}-${{values.application_id}}-prod&var-resolution=30s&var-created_by=All"
 spec:
-  type: demo
+  type: template
   lifecycle: prod
   owner: "${{values.team}}"
   system: ${{values.application_id}}
@@ -65,7 +65,7 @@ metadata:
     grafana/dashboard-selector: "(tags @> 'suXess')"
     grafana/overview-dashboard: "https://grafana.${{values.fqdn}}/d/k8s_views_ns/kubernetes-views-namespaces?orgId=1&refresh=30s&var-datasource=default&var-cluster=test001&var-namespace=${{values.team}}-${{values.application_id}}-test&var-resolution=30s&var-created_by=All"
 spec:
-  type: demo
+  type: template
   lifecycle: test
   owner: "${{values.team}}"
   system: ${{values.application_id}}
@@ -106,7 +106,7 @@ metadata:
     grafana/dashboard-selector: "(tags @> 'suXess')"
     grafana/overview-dashboard: "https://grafana.${{values.fqdn}}/d/k8s_views_ns/kubernetes-views-namespaces?orgId=1&refresh=30s&var-datasource=default&var-cluster=dev001&var-namespace=${{values.team}}-${{values.application_id}}-dev&var-resolution=30s&var-created_by=All"
 spec:
-  type: demo
+  type: template
   lifecycle: dev
   owner: "${{values.team}}"
   system: ${{values.application_id}}
@@ -151,7 +151,7 @@ metadata:
     kargo-project: "https://kargo.${{values.fqdn}}/project/${{values.team}}-${{values.application_id}}-kargo-project"
     grafana/dashboard-selector: "(tags @> 'suXess')"
 spec:
-  type: demo
+  type: template
   lifecycle: deployment
   owner: "${{values.team}}"
   system: ${{values.application_id}}
