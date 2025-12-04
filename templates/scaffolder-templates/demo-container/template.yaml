@@ -1,0 +1,124 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: whoami-test
+  title: Whoami Test App
+  description: Deploys a simple traefik/whoami container for testing kubriX SCM generator and Kargo pipelines.
+  tags:
+    - test
+    - whoami
+    - argocd
+    - kubernetes
+    - hub-spoke
+    - kargo
+    - csa
+spec:
+  owner: group:platform-engineering
+  type: service
+
+  parameters:
+    - title: Application details
+      required:
+        - application_id
+        - owner
+        - description
+        - fqdn
+      properties:
+        application_id:
+          title: Application name
+          type: string
+          description: Unique name for the application (will be prefixed with team name).
+          default: whoami
+          pattern: '^[a-z0-9-]+$'
+        description:
+          title: Description
+          type: string
+          description: What does this application do?
+          default: Test whoami application for validating kubriX deployment pipeline
+        owner:
+          title: Owner team
+          type: string
+          description: Team that owns this application.
+          ui:field: MyGroupsPicker
+          ui:options: {}
+        fqdn:
+          title: Application FQDN
+          type: string
+          description: The fully qualified domain name for the application.
+          default: 'tietoevry.platform-engineer.cloud'
+
+    - title: Repository location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: GitHub Organization
+          type: string
+          description: GitHub organization for the repository.
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - mjay-bs-test
+            requestUserCredentials:
+              secretsKey: USER_OAUTH_TOKEN
+              additionalScopes:
+                github:
+                  - repo
+                  - workflow
+            allowedRepos:
+              - will-be-autocompleted-by-template
+
+  steps:
+    # Fetch team details from catalog
+    - id: catalogFetch
+      name: Fetch team details
+      action: catalog:fetch
+      input:
+        entityRef: ${{ parameters.owner }}
+
+    # Fetch and publish deployment repo
+    - id: fetch-deploy
+      name: Fetch deploy skeleton
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: ./deploy-repo
+        values:
+          application_id: ${{ parameters.application_id }}
+          description: ${{ parameters.description }}
+          fqdn: ${{ parameters.fqdn }}
+          team: ${{ steps['catalogFetch'].output.entity.metadata.name }}
+          repoUrlRepo: ${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}
+          repoOwner: ${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+
+    - id: publish-deploy
+      name: Publish deploy repo to GitHub
+      action: publish:github
+      input:
+        description: "Whoami test deployment: ${{ parameters.description }}"
+        repoUrl: github.com?repo=${{ steps['catalogFetch'].output.entity.metadata.name }}-${{ parameters.application_id }}&owner=${{ (parameters.repoUrl | parseRepoUrl)["owner"] }}
+        sourcePath: ./deploy-repo
+        repoVisibility: public
+        deleteBranchOnMerge: true
+        protectDefaultBranch: false
+        defaultBranch: main
+        token: ${{ secrets.USER_OAUTH_TOKEN }}
+        gitAuthorName: ${{ user.entity.metadata.name }}
+        gitAuthorEmail: ${{ user.entity.spec.profile.email }}
+
+    - id: register-deploy
+      name: Register in catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish-deploy'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps['publish-deploy'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register-deploy'].output.entityRef }}
