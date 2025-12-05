@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: demo-container
   title: Demo Container App
-  description: dev and deploy a demo container, for testing kubriX SCM generator and Kargo pipelines.
+  description: dev and deploy a demo container, for testing kubriX SCM generator and Kargo pipelines. (with TLS)
   tags:
     - test
     - demo-container
