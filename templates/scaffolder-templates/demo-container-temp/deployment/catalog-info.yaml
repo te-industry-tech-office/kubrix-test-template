@@ -11,7 +11,7 @@ metadata:
     - demo
     - csa
   links:
-    - url: http://${{values.team}}-${{values.application_id}}.prod.tietoevry.platform-engineer.cloud
+    - url: https://${{values.team}}-${{values.application_id}}.prod.${{values.fqdn}}
       title: Prod Instance of ${{values.team}}-${{values.application_id}}
       icon: web
   annotations:
@@ -52,7 +52,7 @@ metadata:
     - demo
     - csa
   links:
-    - url: http://${{values.team}}-${{values.application_id}}.test.tietoevry.platform-engineer.cloud
+    - url: https://${{values.team}}-${{values.application_id}}.test.${{values.fqdn}}
       title: Test Instance of ${{values.team}}-${{values.application_id}}
       icon: web
   annotations:
@@ -93,7 +93,7 @@ metadata:
     - demo
     - csa
   links:
-    - url: http://${{values.team}}-${{values.application_id}}.dev.tietoevry.platform-engineer.cloud
+    - url: https://${{values.team}}-${{values.application_id}}.dev.${{values.fqdn}}
       title: Dev Instance of ${{values.team}}-${{values.application_id}}
       icon: web
   annotations:
@@ -140,13 +140,13 @@ metadata:
     - url: https://github.com/${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-deploy
       title: Deployment Repository
       icon: github
-    - url: https://argocd.${{values.fqdn}}/applications/adn-${{values.team}}/${{values.team}}-${{values.application_id}}?resource=
+    - url: https://argocd.${{values.fqdn}}/applications/adn-${{values.team}}/${{values.team}}-${{values.application_id}}-deploy?resource=
       title: ArgoCD Application Information of ${{values.team}}-${{values.application_id}}
       icon: argocd
   annotations:
     github.com/project-slug: ${{values.repoOwner}}/${{values.team}}-${{values.application_id}}-deploy
     argocd/app-namespace: adn-${{values.team}}
-    argocd/app-name: ${{values.team}}-${{values.application_id}}
+    argocd/app-name: ${{values.team}}-${{values.application_id}}-deploy
     backstage.io/techdocs-ref: dir:.
     kargo-project: "https://kargo.${{values.fqdn}}/project/${{values.team}}-${{values.application_id}}-kargo-project"
     grafana/dashboard-selector: "(tags @> 'suXess')"

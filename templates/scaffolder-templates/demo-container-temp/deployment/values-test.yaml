@@ -12,4 +12,8 @@ resources:
 ingress:
   className: "nginx-tietoevry"
   hosts:
-    - host: ${{values.team}}-${{values.application_id}}.test.tietoevry.platform-engineer.cloud
+    - host: ${{values.team}}-${{values.application_id}}.test.${{values.fqdn}}
+  tls:
+    enabled: true
+    hosts: ${{values.team}}-${{values.application_id}}.test.${{values.fqdn}}
+    secretName: ${{values.team}}-${{values.application_id}}-test-tls
